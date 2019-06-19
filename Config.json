@@ -1,0 +1,9 @@
+{
+    "author":  "luicuelo",
+	"modLoader": "forge-14.23.5.2836",
+	"version":  "1.12.2",
+	"name":  "beesForWin",
+	"foldersOverrides": ["config","scripts"],
+	"filesOverrides": ["mods/1.12.2/ChickenASM-1.12-1.0.2.7.jar"]
+}
+    
