@@ -3,7 +3,7 @@
 #if you dont want new files to be download set download to $false
 
 $download=$true 
-$api='https://addons-ecs.forgesvc.net/api/addon/'
+$api='https://addons-ecs.forgesvc.net/api/v2/addon/'
 
 
 $ids=get-content .\ids.txt
@@ -21,13 +21,30 @@ If(!(test-path $path))
       New-Item -ItemType Directory -Force -Path $path
 }
 
-
-
 $clientWeb = New-Object System.Net.WebClient
+
+#https://twitchappapi.docs.apiary.io/#/reference/0/get-multiple-addons/get-multiple-addons/
+#get all the addons 
+
+$modIdArray=@()
+foreach ($linea in $ids){
+    $fields=$linea.Split(";")
+    $modId=$fields[0].ToString()
+
+    if ($modId.Substring(0,1) -ne "#"){
+        $modIdArray+=$modId
+    }
+}
+[string]$modIdArrayString="["+($modIdArray -join ",") +"]"
+
+$response=Invoke-WebRequest -UseBasicParsing https://addons-ecs.forgesvc.net/api/v2/addon -ContentType "application/json" -Method POST -Body ($modIdArrayString)|ConvertFrom-Json
+$addons=@()
+$addons=$response|Select-Object *
+
 
 foreach ($linea in $ids){
     $fields=$linea.Split(";")
-    $modId=$fields[0]
+    $modId=$fields[0].ToString()
     $modName=$fields[1]
     $modFileType=$fields[2]
     $modVersion=''
@@ -41,14 +58,10 @@ foreach ($linea in $ids){
 	
     if($modId.Substring(0,1) -ne "#"){
 
-	
-                $request = $api+$modId
-                $last=$null
-                $last=  try { Invoke-WebRequest $request}
-                catch [System.Net.WebException] { 
-                          Write-Verbose "An exception was caught: $($_.Exception.Message)"
-                          #$_.Exception.Response 
-                } 
+
+                $last =$null
+                $last = $addons |Where-Object {$_.id -eq $modId}
+
                 $tversion=$version
                 if($modVersion -gt '') {
                     $tversion=$modVersion
@@ -58,13 +71,9 @@ foreach ($linea in $ids){
                 $idList=$null 
 
                 if($last -ne $null){
-                $list= $last|ConvertFrom-Json|select -expand  gameVersionLatestFiles |Select gameVersion,projectFileID,projectFileName,fileType | where {($_.gameVersion -eq $tversion)  -and ($_.fileType -ne 'ALPHA')}
+                    $list= $last|select -expand  gameVersionLatestFiles |Select gameVersion,projectFileID,projectFileName,fileType | where {($_.gameVersion -eq $tversion)  -and ($_.fileType -ne 'ALPHA')}
                 }
-
                 
- 
-
-        
 
                 if  ($list.fileType -contains $modFileType) {
                         $list=$list  | where {($_.fileType -eq $modFileType)} 
@@ -77,9 +86,10 @@ foreach ($linea in $ids){
                 }
 
 
+                $idList=$null
                 $idList=$list.projectFileID
 				Write-Host  $modName ":" $list.fileType ":" $modId ":" $tversion
-    
+                if ($idList  -eq $null) {Write-Host "File not found"}
                 if($idList -ne $null){
                     foreach ($id in $idList){
             
