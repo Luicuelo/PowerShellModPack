@@ -15,3 +15,4 @@ I have uploaded a ids.txt example. A reduced technical modpack.
 CreateZip.ps1 uses 7z to create a zip file with the manifest.json and the other files and folders specified at config.json
 You can publish this zip file at curseforge as modpack.
 
+Documentation for Curseforge api.  https://twitchappapi.docs.apiary.io/#
