@@ -1,6 +1,7 @@
 
 #Luis Cuesta.2019..
 #if you dont want new files to be download set download to $false
+clear
 
 $download=$true 
 $api='https://addons-ecs.forgesvc.net/api/v2/addon/'
@@ -94,30 +95,37 @@ foreach ($linea in $ids){
                     foreach ($id in $idList){
             
                             $requestfile= $api+$modId+'/file/'+$id
+                            $file=""
                             $file= Invoke-WebRequest $requestfile|ConvertFrom-Json |select fileName,downloadURL
                             if($modName.Substring(0,1) -eq "["){
                                 $modName="\"+$modName}
 							$expresion='^'+$modName
                             $localFile =($localFiles -match  $expresion)
                             #$newFile=$file.fileName 
-                            $pos=$file.downloadURL.LastIndexOf('/')+1
-                            $newFile=$file.downloadURL.substring($pos,$file.downloadURL.Length-$pos)
-                            if($newFile.substring($newFile.Length-4,4) -ne '.jar'){$newFile=$newFile+'.jar'}
-             
-                            #si solo hay un localfile -match devuelve false en vez de vacio, 
-                            $empty=([string]::IsNullOrEmpty($localFile) -or (-Not $localFile ))
-                            if (($localFile -ne $newFile) -or $empty ){
-                                Write-Host  "--------------"  $newFile "<->" $localFile 
-                                #Write-Host $file.downloadURL     
-                                if ($download){                
-                                    if (-not($empty)){
-                                        $localFilePath=  $executionPath+"\"+$localFile 
-                                        $newName="__"+$localFile     
-                                        Rename-Item -Path $localFilePath -NewName $newName
+                            
+                            $newFile=""
+                            if($file -ne ""){
+                                    $pos=$file.downloadURL.LastIndexOf('/')+1
+                                    $newFile=$file.downloadURL.substring($pos,$file.downloadURL.Length-$pos)}
+                            if($newFile -eq ""){Write-Host  "Fallo recuperando archivo"}
+                            else {
+
+                                if($newFile.substring($newFile.Length-4,4) -ne '.jar'){$newFile=$newFile+'.jar'}             
+                                #si solo hay un localfile -match devuelve false en vez de vacio, 
+                                $empty=([string]::IsNullOrEmpty($localFile) -or (-Not $localFile ))
+                                if (($localFile -ne $newFile) -or $empty ){
+                                    Write-Host  "--------------"  $newFile "<->" $localFile 
+                                    #Write-Host $file.downloadURL     
+                                    if ($download){                
+                                        if (-not($empty)){
+                                            $localFilePath=  $executionPath+"\"+$localFile 
+                                            $newName="__"+$localFile     
+                                            Rename-Item -Path $localFilePath -NewName $newName
+                                        }
+                                        $clientWeb.DownloadFile($file.downloadURL, $executionPath+"\"+"New\"+$newFile)
                                     }
-                                    $clientWeb.DownloadFile($file.downloadURL, $executionPath+"\"+"New\"+$newFile)
-                                }
-                            }           
+                                }  
+                            }         
                     }
                 }else {
 							Write-Host $modName " Not Found"
