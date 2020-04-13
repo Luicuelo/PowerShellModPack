@@ -5,6 +5,7 @@ clear
 
 $download=$true 
 $api='https://addons-ecs.forgesvc.net/api/v2/addon/'
+#$api='https://curse.nikky.moe/api/addon/'
 
 
 $ids=get-content .\ids.txt
@@ -36,9 +37,11 @@ foreach ($linea in $ids){
         $modIdArray+=$modId
     }
 }
+
 [string]$modIdArrayString="["+($modIdArray -join ",") +"]"
 
-$response=Invoke-WebRequest -UseBasicParsing https://addons-ecs.forgesvc.net/api/v2/addon -ContentType "application/json" -Method POST -Body ($modIdArrayString)|ConvertFrom-Json
+#$modIdArrayString="[72210]"
+$response=Invoke-WebRequest -UseBasicParsing $api -ContentType "application/json" -Method POST -Body ($modIdArrayString)|ConvertFrom-Json
 $addons=@()
 $addons=$response|Select-Object *
 
@@ -89,32 +92,29 @@ foreach ($linea in $ids){
 
                 $idList=$null
                 $idList=$list.projectFileID
-				Write-Host  $modName ":" $list.fileType ":" $modId ":" $tversion
+                $newfilename=$list.projectFileName
+				Write-Host  $modName ":" $list.fileType ":" $modId ":" $tversion ":" $newfilename
                 if ($idList  -eq $null) {Write-Host "File not found"}
                 if($idList -ne $null){
-                    foreach ($id in $idList){
+                    
             
-                            $requestfile= $api+$modId+'/file/'+$id
+                            $requestfile= $api+$modId+'/file/'+$idList
                             $file=""
                             $file= Invoke-WebRequest $requestfile|ConvertFrom-Json |select fileName,downloadURL
                             if($modName.Substring(0,1) -eq "["){
                                 $modName="\"+$modName}
 							$expresion='^'+$modName
                             $localFile =($localFiles -match  $expresion)
-                            #$newFile=$file.fileName 
-                            
-                            $newFile=""
-                            if($file -ne ""){
-                                    $pos=$file.downloadURL.LastIndexOf('/')+1
-                                    $newFile=$file.downloadURL.substring($pos,$file.downloadURL.Length-$pos)}
-                            if($newFile -eq ""){Write-Host  "Fallo recuperando archivo"}
+                            $fileigual = ($localFiles -contains  $newfilename)
+               
+                            if($file.fileName -eq ""){Write-Host  "Fallo recuperando archivo"}
                             else {
 
-                                if($newFile.substring($newFile.Length-4,4) -ne '.jar'){$newFile=$newFile+'.jar'}             
+                                       
                                 #si solo hay un localfile -match devuelve false en vez de vacio, 
                                 $empty=([string]::IsNullOrEmpty($localFile) -or (-Not $localFile ))
-                                if (($localFile -ne $newFile) -or $empty ){
-                                    Write-Host  "--------------"  $newFile "<->" $localFile 
+                                if (-not $fileigual -or $empty ){
+                                    Write-Host  "--------------"  $newfilename "<->" $localFile 
                                     #Write-Host $file.downloadURL     
                                     if ($download){                
                                         if (-not($empty)){
@@ -122,11 +122,11 @@ foreach ($linea in $ids){
                                             $newName="__"+$localFile     
                                             Rename-Item -Path $localFilePath -NewName $newName
                                         }
-                                        $clientWeb.DownloadFile($file.downloadURL, $executionPath+"\"+"New\"+$newFile)
+                                        $clientWeb.DownloadFile($file.downloadURL, $executionPath+"\"+"New\"+$newfilename)
                                     }
                                 }  
                             }         
-                    }
+                    
                 }else {
 							Write-Host $modName " Not Found"
                 }
