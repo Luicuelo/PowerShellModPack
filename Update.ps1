@@ -14,10 +14,10 @@ $version=$ids[0].Split(";")[1]
 
 # PowerShell v2
 $executionPath = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
-$executionPath = $executionPath.Substring(0,$executionPath.length-10)
-$localFiles = Get-ChildItem -Path $executionPath -Name '*.jar' -File
+$modPath = $executionPath.Substring(0, $executionPath.LastIndexOf('\'))
+$localFiles = Get-ChildItem -Path $modPath -Name '*.jar' -File
 
-$path = $executionPath+"\New"
+$path = $modPath+"\New"
 If(!(test-path $path))
 {
       New-Item -ItemType Directory -Force -Path $path
@@ -119,11 +119,11 @@ foreach ($linea in $ids){
                                     #Write-Host $file.downloadURL     
                                     if ($download){                
                                         if (-not($empty)){
-                                            $localFilePath=  $executionPath+"\"+$localFile 
+                                            $localFilePath=  $modPath+"\"+$localFile 
                                             $newName="__"+$localFile     
                                             Rename-Item -Path $localFilePath -NewName $newName
                                         }
-                                        $clientWeb.DownloadFile($file.downloadURL, $executionPath+"\"+"New\"+$newfilename)
+                                        $clientWeb.DownloadFile($file.downloadURL, $modPath+"\"+"New\"+$newfilename)
                                     }
                                 }  
                             }         
