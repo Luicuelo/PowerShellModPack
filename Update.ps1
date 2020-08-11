@@ -96,37 +96,45 @@ foreach ($linea in $ids){
 				Write-Host  $modName ":" $list.fileType ":" $modId ":" $tversion ":" $newfilename
                 if ($idList  -eq $null) {Write-Host "File not found"}
                 if($idList -ne $null){
-                    
-            
-                            $requestfile= $api+$modId+'/file/'+$idList
-                            $file=""
-                            $file= Invoke-WebRequest $requestfile|ConvertFrom-Json |select fileName,downloadURL
+                                                
                             if($modName.Substring(0,1) -eq "["){
                                 $modName="\"+$modName}
-							$expresion='^'+$modName
+							$expresion='^'+$modName                            
+                            
                             $localFile =($localFiles -match  $expresion)
                             $fileExists = ($localFiles -contains  $newfilename)
                
-                            if($file.fileName -eq ""){Write-Host  "Fallo recuperando archivo"}
-                            else {
+                                                             
+                            #ijf only there are a localfile -match devuelve false , not empty, 
+                            $empty=([string]::IsNullOrEmpty($localFile) -or (-Not $localFile ))
+                            #if (-not $fileExists -or $empty ){								
+							if (-not $fileExists){
 
-                                       
-                                #ijf only there are a localfile -match devuelve false , not empty, 
-                                $empty=([string]::IsNullOrEmpty($localFile) -or (-Not $localFile ))
-                                #if (-not $fileExists -or $empty ){								
-								if (-not $fileExists){
+                                    #Solo recuperamos datos del archivo si es necesario porque no coincide
+                                    $requestfile= $api+$modId+'/file/'+$idList
+                                    $file=""
+                                    $file= Invoke-WebRequest $requestfile|ConvertFrom-Json |select fileName,downloadURL                                    
                                     Write-Host  "--------------"  $newfilename "<->" $localFile 
-                                    #Write-Host $file.downloadURL     
-                                    if ($download){                
-                                        if (-not($empty)){
-                                            $localFilePath=  $modPath+"\"+$localFile 
-                                            $newName="__"+$localFile     
-                                            Rename-Item -Path $localFilePath -NewName $newName
-                                        }
-                                        $clientWeb.DownloadFile($file.downloadURL, $modPath+"\"+"New\"+$newfilename)
-                                    }
-                                }  
-                            }         
+                                    if($file.fileName -eq ""){Write-Host  "Fallo recuperando archivo"}
+                                    else {
+
+
+
+                                            #Write-Host $file.downloadURL     
+                                            if ($download){
+                                                $rutaNuevo=$modPath+"\"+"New\"+$newfilename                                    
+                                                $yaExiste=(Test-Path $rutaNuevo -PathType Leaf)
+                                                if(-not  $yaExiste ){
+                                                    if (-not($empty)){                                            
+                                                        $localFilePath=  $modPath+"\"+$localFile 
+                                                        $newName="__"+$localFile     
+                                                        Rename-Item -Path $localFilePath -NewName $newName
+                                                    }
+                                                    $clientWeb.DownloadFile($file.downloadURL, $modPath+"\"+"New\"+$newfilename)
+                                                }
+                                            }
+                                    }  
+                                }         
                     
                 }else {
 							Write-Host $modName " Not Found"
