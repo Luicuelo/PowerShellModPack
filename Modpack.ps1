@@ -1,4 +1,4 @@
-$legibleModFileNames=$false
+$legibleModFileNames=$true
 #if true the regular expression of the mod file names is more simple but sometimes needs manual fine tuning.
 
 
@@ -132,7 +132,7 @@ Add-Type  -TypeDefinition $Source -Language CSharp
 
 
 $Destination=[string](Get-Location)
-$idFile=$Destination+"\ids.txt"
+$idFile=$Destination+"\T_ids.txt"
 $modsFolder=$Destination+"\.."
 
 
@@ -164,7 +164,9 @@ $unmatches =$response|select -ExpandProperty unmatchedFingerprints
 
 $versions=@{}
 foreach ($row in $matches){
-    $version= $row.file.gameVersion.Get(0)
+    $temp= $row.file.gameVersion.Get(0)
+    if($temp -eq 'Forge'){$temp=$row.file.gameVersion.Get(1)}
+    $version=$temp
     $valor=$versions[$version]
     if ($valor -gt 0){
         $versions.Remove($version)
