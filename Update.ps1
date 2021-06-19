@@ -78,7 +78,12 @@ foreach ($linea in $ids){
                     $list= $last|select -expand  gameVersionLatestFiles |Select gameVersion,projectFileID,projectFileName,fileType,modLoader | where {($_.gameVersion -eq $tversion)  -and ($_.fileType -ne 'ALPHA')}
                 }
                 
+                          
+                if  ($list.modLoader -contains '1') {
+                        $list=$list  | where {($_.modLoader -eq '1')} 
+                }
 
+                
                 if  ($list.fileType -contains $modFileType) {
                         $list=$list  | where {($_.fileType -eq $modFileType)} 
                 }else{
@@ -89,22 +94,22 @@ foreach ($linea in $ids){
 
                 }
 
+      
                 
-                if  ($list.modLoader -contains '1') {
-                        $list=$list  | where {($_.fileType -eq '1')} 
-                }
-
-                
-
+                if ($list  -ne $null) { 
+                                        $list=$list[0] #cogemos solo uno si hay varios. 
+                                 }
 
                 $idList=$null
                 $idList=$list.projectFileID
                 
                 $newfilename=$list.projectFileName
 				Write-Host  $modName ":" $list.fileType ":" $modId ":" $tversion ":" $newfilename
-                if ($idList  -eq $null) {Write-Host "File not found" -ForegroundColor red }
+                if ($idList  -eq $null) {
+                    Write-Host "File not found" -ForegroundColor red 
+                    }
                 if($idList -ne $null){
-                            $idList=$idList[0] #cogemos solo uno si hay varios.                                                
+                            
                             if($modName.Substring(0,1) -eq "["){
                                 $modName="\"+$modName}
 							$expresion='^'+$modName                            
