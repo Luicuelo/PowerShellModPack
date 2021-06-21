@@ -4,6 +4,7 @@
 clear
 
 $download=$true 
+$modLoaderAllowed='1' #List of allowed modLoader values, empty value is allowed too.
 $api='https://addons-ecs.forgesvc.net/api/v2/addon/'
 #$api='https://curse.nikky.moe/api/addon/'
 
@@ -75,13 +76,14 @@ foreach ($linea in $ids){
                 $idList=$null 
 
                 if($last -ne $null){
-                    $list= $last|select -expand  gameVersionLatestFiles |Select gameVersion,projectFileID,projectFileName,fileType,modLoader | where {($_.gameVersion -eq $tversion)  -and ($_.fileType -ne 'ALPHA')}
+                    $list= $last|select -expand  gameVersionLatestFiles |Select gameVersion,projectFileID,projectFileName,fileType,modLoader | where {($_.gameVersion -eq $tversion)  -and ($_.fileType -ne 'ALPHA') -and ((-not  $_.modLoader) -or ($modLoaderAllowed -contains $_.modLoader))} 
+                    #quitamos los mods forge
                 }
                 
                           
-                if  ($list.modLoader -contains '1') {
-                        $list=$list  | where {($_.modLoader -eq '1')} 
-                }
+               # if  ($list.modLoader -contains '1') {
+               #         $list=$list  | where {($_.modLoader -eq '1')} 
+               # }
 
                 
                 if  ($list.fileType -contains $modFileType) {
